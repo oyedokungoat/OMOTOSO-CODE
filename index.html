@@ -10,8 +10,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Firebase Compat SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-auth-compat.js"></script>
     
     <!-- Custom Tailwind Config -->
     <script>
@@ -155,13 +156,13 @@
                 <div class="text-white space-y-6">
                     <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight animate-fade-in-up">
                         Your Daily Dose of<br>
-                        <span class="text-accent animate-pulse">Pet News & Joy</span> 🐾
+                        <span class="text-accent">Pet News & Joy</span> 🐾
                     </h1>
-                    <p class="text-lg md:text-xl text-gray-200 animate-fade-in-up delay-200" style="animation-delay: 0.2s;">
+                    <p class="text-lg md:text-xl text-gray-200" style="animation: fadeInUp 0.6s ease-out 0.2s both;">
                         Stay updated with heartwarming stories, expert care tips, and the latest 
                         news from the world of our furry, feathered, and scaly friends.
                     </p>
-                    <div class="flex flex-col sm:flex-row gap-4 animate-fade-in-up delay-400" style="animation-delay: 0.4s;">
+                    <div class="flex flex-col sm:flex-row gap-4" style="animation: fadeInUp 0.6s ease-out 0.4s both;">
                         <a href="blog.html" class="inline-block bg-primary text-white px-8 py-4 rounded-full font-semibold hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 hover:shadow-lg text-center">
                             Read Our Blog
                         </a>
@@ -332,7 +333,7 @@
                     Subscribe Free
                 </button>
             </form>
-            <div id="newsletter-message" class="mt-4 text-white font-medium hidden animate-fade-in"></div>
+            <div id="newsletter-message" class="mt-4 text-white font-medium hidden"></div>
         </div>
     </section>
 
@@ -343,7 +344,7 @@
                 <!-- Brand -->
                 <div class="scroll-animate">
                     <h3 class="text-xl font-bold mb-4 transition-transform duration-300 hover:scale-110 inline-block">🐾 Happy Paws</h3>
-                    <p class="text-gray-300">Bringing joy, knowledge, and community to pet lovers worldwide since 2014.</p>
+                    <p class="text-gray-300">Bringing joy, knowledge, and community to pet lovers worldwide.</p>
                 </div>
                 
                 <!-- Quick Links -->
@@ -387,31 +388,43 @@
             </div>
             
             <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400 text-sm scroll-animate">
-                <p id="copyright-year">&copy; <span id="current-year">2024</span> Happy Paws. All rights reserved.</p>
+                <p>&copy; <span id="current-year">2024</span> Happy Paws. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
-    <!-- ==================== SCRIPTS ==================== -->
-    <!-- Firebase Initialization -->
-    <script src="assets/js/firebase-init.js"></script>
-    
-    <!-- Main JavaScript -->
+    <!-- ==================== ALL JAVASCRIPT EMBEDDED DIRECTLY ==================== -->
     <script>
-        // ========== GET CURRENT YEAR FOR FOOTER ==========
+        // ========== 1. FIREBASE INITIALIZATION ==========
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNVzufe491wFNjok66K5d-r_YQcZ9G3zg",
+            authDomain: "happy-paw-8dea6.firebaseapp.com",
+            projectId: "happy-paw-8dea6",
+            storageBucket: "happy-paw-8dea6.appspot.com",
+            messagingSenderId: "383324061970",
+            appId: "1:383324061970:web:fbc89e595fb0ba337533cb",
+            measurementId: "G-FYR20YN7FV"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Initialize Firestore and make it globally available
+        const db = firebase.firestore();
+        window.db = db;
+
+        console.log('🔥 Firebase initialized successfully!');
+
+        // ========== 2. GET CURRENT YEAR FOR FOOTER ==========
         document.getElementById('current-year').textContent = new Date().getFullYear();
 
-        // ========== MOBILE MENU TOGGLE ==========
+        // ========== 3. MOBILE MENU TOGGLE ==========
         document.getElementById('mobile-menu-button')?.addEventListener('click', () => {
             const menu = document.getElementById('mobile-menu');
             menu.classList.toggle('hidden');
-            // Add slide animation
-            if (!menu.classList.contains('hidden')) {
-                menu.style.animation = 'fadeInUp 0.3s ease-out';
-            }
         });
 
-        // ========== SCROLL ANIMATIONS (Intersection Observer) ==========
+        // ========== 4. SCROLL ANIMATIONS (Intersection Observer) ==========
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -421,19 +434,18 @@
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('show');
-                    // Don't observe once shown
                     observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
 
         // Observe all elements with animation classes
-        document.addEventListener('DOMContentLoaded', () => {
-            const animatedElements = document.querySelectorAll('.scroll-animate, .scroll-animate-left, .scroll-animate-right, .scroll-animate-scale');
-            animatedElements.forEach(el => observer.observe(el));
-        });
+        const animatedElements = document.querySelectorAll(
+            '.scroll-animate, .scroll-animate-left, .scroll-animate-right, .scroll-animate-scale'
+        );
+        animatedElements.forEach(el => observer.observe(el));
 
-        // ========== LOAD LATEST NEWS ==========
+        // ========== 5. LOAD LATEST NEWS FROM FIRESTORE ==========
         async function loadLatestNews() {
             const grid = document.getElementById('latest-news-grid');
             const loading = document.getElementById('news-loading');
@@ -441,19 +453,14 @@
             const empty = document.getElementById('news-empty');
             
             try {
-                // Ensure Firebase is initialized
-                if (!window.db) {
-                    throw new Error('Firebase not initialized');
-                }
-                
-                // Fetch latest blog posts from Firestore
+                // Fetch published blog posts from Firestore, newest first, limit 3
                 const snapshot = await db.collection('blogPosts')
                     .where('published', '==', true)
                     .orderBy('createdAt', 'desc')
                     .limit(3)
                     .get();
                 
-                // Hide loading
+                // Hide loading spinner
                 loading.classList.add('hidden');
                 
                 if (snapshot.empty) {
@@ -476,7 +483,7 @@
                     });
                     
                     const articleHTML = `
-                        <article class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 scroll-animate">
+                        <article class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
                             <div class="relative h-48 overflow-hidden">
                                 <img 
                                     src="${post.imageUrl || 'https://placehold.co/400x300/FFB563/FFFFFF?text=Pet+News'}" 
@@ -514,14 +521,14 @@
             }
         }
 
-        // ========== NEWSLETTER FORM HANDLER ==========
+        // ========== 6. NEWSLETTER FORM SUBMISSION ==========
         document.getElementById('newsletter-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('newsletter-email').value;
             const messageDiv = document.getElementById('newsletter-message');
             const submitBtn = e.target.querySelector('button');
             
-            // Disable button and show loading state
+            // Disable button during submission
             submitBtn.disabled = true;
             submitBtn.textContent = 'Subscribing...';
             
@@ -532,23 +539,21 @@
                 });
                 
                 messageDiv.textContent = '🎉 Welcome to the Happy Paws family! Check your inbox soon.';
-                messageDiv.classList.remove('hidden', 'text-red-200');
-                messageDiv.classList.add('text-white', 'animate-fade-in');
+                messageDiv.className = 'mt-4 text-white font-medium';
                 document.getElementById('newsletter-email').value = '';
                 
             } catch (err) {
                 console.error('Error subscribing:', err);
                 messageDiv.textContent = 'Oops! Something went wrong. Please try again.';
-                messageDiv.classList.remove('hidden', 'text-white');
-                messageDiv.classList.add('text-red-200', 'animate-fade-in');
+                messageDiv.className = 'mt-4 text-red-200 font-medium';
             } finally {
-                // Reset button
+                // Re-enable button
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Subscribe Free';
             }
         });
 
-        // ========== SMOOTH SCROLL FOR ANCHOR LINKS ==========
+        // ========== 7. SMOOTH SCROLL FOR ANCHOR LINKS ==========
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -559,12 +564,12 @@
             });
         });
 
-        // ========== INITIALIZE ON PAGE LOAD ==========
+        // ========== 8. INITIALIZE EVERYTHING ON PAGE LOAD ==========
         document.addEventListener('DOMContentLoaded', () => {
-            // Get current year
+            // Set current year in footer
             document.getElementById('current-year').textContent = new Date().getFullYear();
             
-            // Load latest news
+            // Load latest news articles
             loadLatestNews();
         });
     </script>
